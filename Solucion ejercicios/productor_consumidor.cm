@@ -1,0 +1,65 @@
+// PRACTICA 2 - CONCURRENCIA (JBACI)
+// PRODUCTOR-CONSUMIDOR CON BUFFER LIMITADO
+//
+// DOCUMENTACION (como lo voy a hacer):
+// Es la solucion de teoria del productor-consumidor con buffer limitado.
+// Hay dos procesos (productor y consumidor) y un buffer de tamano N.
+// Hay que resolver tres cosas, y uso un semaforo para cada una:
+//
+// - Seccion critica (exclusion mutua): semaforo mutex, valor inicial 1 (S en teoria)
+// - Consumidor no coge si esta vacio: semaforo llenos, valor inicial 0 (C en teoria)
+// - Productor no deja si esta lleno: semaforo vacios, valor inicial N (P en teoria)
+//
+// Productor: P(vacios) P(mutex) S.C. V(mutex) V(llenos)
+// Consumidor: P(llenos) P(mutex) S.C. V(mutex) V(vacios)
+// (P = wait, V = signal en JBACI)
+// Los dos procesos se lanzan a la vez con cobegin.
+// Uso cout para ver que hace cada proceso y cuantas piezas hay en el buffer.
+
+const int N = 5;
+int piezas = 0;
+
+semaphore mutex;
+semaphore llenos;
+semaphore vacios;
+
+void productor()
+{
+    int i;
+    for (i = 1; i <= 10; i++)
+    {
+        wait(vacios);
+        wait(mutex);
+        piezas = piezas + 1;
+        cout << "Productor deja un elemento. Hay " << piezas << endl;
+        signal(mutex);
+        signal(llenos);
+    }
+}
+
+void consumidor()
+{
+    int i;
+    for (i = 1; i <= 10; i++)
+    {
+        wait(llenos);
+        wait(mutex);
+        piezas = piezas - 1;
+        cout << "Consumidor coge un elemento. Hay " << piezas << endl;
+        signal(mutex);
+        signal(vacios);
+    }
+}
+
+void main()
+{
+    initialsem(mutex, 1);
+    initialsem(llenos, 0);
+    initialsem(vacios, N);
+
+    cobegin
+    {
+        productor();
+        consumidor();
+    }
+}
